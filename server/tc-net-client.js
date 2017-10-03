@@ -4,7 +4,7 @@ const ical = require('ical'),
   months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 const INSA_ICS = "http://tc-net2.insa-lyon.fr/aff/AffichageEdtTexteMatiere.jsp";
-const parseRegexp = /Sem\. [0-9]{1,2}, [a-z]{0,3}\. ([0-9]{1,2}\/[0-9]{1,2}\/[0-9]{2,4}) +([0-9]{2}h[0-9]{2})-([0-9]{2}h[0-9]{2}) +([0-9])TC(?:-G([0-9]+))? +([A-Za-z0-9-_]*) +\[((?:[A-Z]{3}(?:, )?)*)\] +([0-9])-([0-9-A-Za-zéèà ]*[0-9-A-Za-zéèà])(?: {([0-9-A-Za-zéèà ]*)})?/mg;
+const parseRegexp = /Sem\. [0-9]{1,2}, [a-z]{0,3}\. ([0-9]{1,2}\/[0-9]{1,2}\/[0-9]{2,4}) +([0-9]{2}h[0-9]{2})-([0-9]{2}h[0-9]{2}) +([0-9])TC(?:-G([0-9]+))? +([A-Za-z0-9-_]*) +\[((?:[A-Z]{3}(?:, )?)*)\] +([0-9])-([0-9-A-Za-zéèà ]*[0-9-A-Za-zéèà])(?: {([0-9-A-Za-zéèà \/\\]*)})?/mg;
 
 function TcNetClient() {
   this.lessons = {};
@@ -43,14 +43,15 @@ function TcNetClient() {
       }
     }, function (err, res, data) {
       const $ = cheerio.load(data);
-      let lesson = [];
+      let lesson;
       let content = $('pre').html().split('\n');
       content.splice(0, 1);
       lesson = content.map(function (line) {
         parseRegexp.lastIndex = 0;
         const data = parseRegexp.exec(line);
         if(data===null)return;
-        const name = course.name + " - " + data[6];
+        const theme = data[6];
+        const name = course.name;
         const type = data[8];
         const room = data[9];
         const start = data[1] + ' ' + data[2];
@@ -60,6 +61,7 @@ function TcNetClient() {
         const ens = data[7];
         return new Lesson(
           name,
+          theme,
           type,
           room,
           start,
@@ -69,13 +71,38 @@ function TcNetClient() {
           ens
         )
       });
+      lesson = lesson.filter(function (e) {
+        return typeof e !== 'undefined';
+      });
       callback(lesson);
     })
 
   }
+
+  this.fetchAll = function (courses, group, callback) {
+    const that = this;
+    courses = courses.split(',');
+    const lessons = [];
+    let tokensBeforeReturn = courses.length;
+
+    const localCallback = function (loaded_lessons) {
+      lessons.push.apply(lessons, loaded_lessons);
+      tokensBeforeReturn--;
+      if(tokensBeforeReturn <= 0) callback(lessons);
+    };
+
+    if(tokensBeforeReturn === 0) {
+      localCallback([]);
+    } else {
+      courses.map(function (c) {
+        that.fetch(c, group, localCallback);
+      });
+    }
+  }
+
 }
 
-function Lesson(name, type, room, start, end, year, group, ens) {
+function Lesson(name, theme, type, room, start, end, year, group, ens) {
   this.name = name;
   this.type = type;
   this.room = room;
@@ -84,11 +111,42 @@ function Lesson(name, type, room, start, end, year, group, ens) {
   this.year = year;
   this.group = group;
   this.ens = ens;
+  this.theme = theme;
+
+  this.getTypeName = function(){
+    switch(this.type) {
+      case "1":
+        return "Amphi";
+      case "2":
+        return "TD";
+      case "3":
+        return "TP";
+      default:
+        return "Cours"
+    }
+  };
+
+  this.getDescription = function(){
+    let description = "";
+    if(this.ens){
+      description += "Enseignant : " + this.ens + "\n";
+    } else {
+      description += "Pas d'enseignant attribué\n"
+    }
+    if(this.theme) {
+      description += "Thème du cours : " + this.theme + "\n";
+    }
+    if(this.type) {
+      description += "Type de cours : " + this.getTypeName() + "\n";
+    }
+    return description;
+  };
 
   this.toJSON = function () {
     return {
-      name: this.name + " (" + this.type + ")",
+      name: this.name,
       location: this.room + ", 6 avenue des Arts, 69100 Villeurbanne",
+      description: this.getDescription(),
       start: this.start,
       end: this.end
     }

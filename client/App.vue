@@ -1,6 +1,7 @@
 <template>
   <div>
-    <h1>{{ msg }}</h1>
+    <h1>Sélectionne tes cours</h1>
+
     <button class="button" v-on:click="helloCall()">Call API</button>
     <p>API says: {{ api }}</p>
   </div>
@@ -33,7 +34,7 @@ export default {
 }
 </script>
 
-<style lang="sass">
+<style lang="scss">
 body {
   font-family: Open Sans, sans-serif;
 }

@@ -3,6 +3,9 @@
 const Hapi = require('hapi');
 const Inert = require('inert');
 
+const TcNetClient = require('./server/tc-net-client');
+const client = new TcNetClient();
+
 const server = new Hapi.Server();
 server.connection({
   port: 3000
@@ -81,11 +84,17 @@ server.register([Inert], function (err) {
   // Example api call
   server.route({
     method: 'GET',
-    path: '/api/call',
+    path: '/api/courses',
     handler: function (request, reply) {
-      reply({
-        message: 'Hello!'
-      })
+      client.fetchCourses(reply);
+    }
+  });
+
+  server.route({
+    method: 'GET',
+    path: '/api/courses/{name}',
+    handler: function (request, reply) {
+      client.fetchAll(request.params.name, null, reply);
     }
   });
 
