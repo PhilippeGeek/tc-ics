@@ -128,16 +128,15 @@ function Lesson(name, theme, type, room, start, end, year, group, ens) {
 
   this.getDescription = function(){
     let description = "";
-    if(this.ens){
-      description += "Enseignant : " + this.ens + "\n";
-    } else {
-      description += "Pas d'enseignant attribué\n"
-    }
+
     if(this.theme) {
-      description += "Thème du cours : " + this.theme + "\n";
+      description += this.theme + " - ";
+    }
+    if(this.ens){
+      description += this.ens + " - ";
     }
     if(this.type) {
-      description += "Type de cours : " + this.getTypeName() + "\n";
+      description += this.getTypeName();
     }
     return description;
   };
@@ -145,8 +144,12 @@ function Lesson(name, theme, type, room, start, end, year, group, ens) {
   this.toJSON = function () {
     return {
       name: this.name,
-      location: this.room + ", 6 avenue des Arts, 69100 Villeurbanne",
+      group: this.group,
+      location: this.room,
       description: this.getDescription(),
+      theme: this.theme,
+      ens: this.ens.split(", "),
+      type: this.type,
       start: this.start,
       end: this.end
     }
@@ -154,7 +157,20 @@ function Lesson(name, theme, type, room, start, end, year, group, ens) {
 }
 
 function Course(name) {
-  this.name = name;
+  this.id = name;
+  const data = name.split("-",2);
+  if(data.length > 1) {
+    let match = data[0].match(/([1-9])(TC[A]*)/i);
+    if (match) {
+      this.year = parseInt(match[1]);
+      this.section = match[2];
+    } else {
+      this.section = data[0];
+    }
+    this.name = data[1];
+  } else {
+    this.name = name;
+  }
 }
 
 TcNetClient.Lesson = Lesson;
