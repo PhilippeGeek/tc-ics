@@ -4,7 +4,7 @@ const ical = require('ical'),
   months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 const INSA_ICS = "http://tc-net2.insa-lyon.fr/aff/AffichageEdtTexteMatiere.jsp";
-const parseRegexp = /Sem\. [0-9]{1,2}, [a-z]{0,3}\. ([0-9]{1,2}\/[0-9]{1,2}\/[0-9]{2,4}) +([0-9]{2}h[0-9]{2})-([0-9]{2}h[0-9]{2}) +([0-9])TC(?:-G([0-9]+))? +([A-Za-z0-9-_]*) +\[((?:[A-Z]{3}(?:, )?)*)\] +([0-9])-([0-9-A-Za-zéèà ]*[0-9-A-Za-zéèà])(?: {([0-9-A-Za-zéèà \/\\]*)})?/mg;
+const parseRegexp = /Sem\. [0-9]{1,2}, [a-z]{0,3}\. ([0-9]{1,2}\/[0-9]{1,2}\/[0-9]{2,4}) +([0-9]{2}h[0-9]{2})-([0-9]{2}h[0-9]{2}) +([0-9])TC(?:-G([0-9]+))? +([A-Za-z0-9-_]*) +\[((?:[A-Z]{3}(?:, )?)*)\] +([0-9])*-*([0-9-A-Za-zéèà ]*[0-9-A-Za-zéèà])(?: {([0-9-A-Za-zéèà \/\\]*)})?/mg;
 
 function TcNetClient() {
   this.lessons = {};
