@@ -60,6 +60,7 @@ function TcNetClient() {
         const group = data[5];
         const ens = data[7];
         return new Lesson(
+          course,
           name,
           theme,
           type,
@@ -102,7 +103,8 @@ function TcNetClient() {
 
 }
 
-function Lesson(name, theme, type, room, start, end, year, group, ens) {
+function Lesson(course, name, theme, type, room, start, end, year, group, ens) {
+  this.course = course;
   this.name = name;
   this.type = type;
   this.room = room;
@@ -144,6 +146,7 @@ function Lesson(name, theme, type, room, start, end, year, group, ens) {
   this.toJSON = function () {
     return {
       name: this.name,
+      course: this.course,
       group: this.group,
       location: this.room,
       description: this.getDescription(),
@@ -157,19 +160,20 @@ function Lesson(name, theme, type, room, start, end, year, group, ens) {
 }
 
 function Course(name) {
+  const reg = /^(([1-9])(TC[A]*)|[A-Z]+)-([A-Za-z0-9-]+)$/gm;
   this.id = name;
-  const data = name.split("-",2);
-  if(data.length > 1) {
-    let match = data[0].match(/([1-9])(TC[A]*)/i);
-    if (match) {
-      this.year = parseInt(match[1]);
-      this.section = match[2];
-    } else {
-      this.section = data[0];
-    }
-    this.name = data[1];
+  const data = reg.exec(name);
+  if(data && data[2]) {
+    this.year = parseInt(data[2]);
+    this.section = data[3];
+    this.name = data[4];
   } else {
-    this.name = name;
+    if (data && data[0]){
+      this.name = data[4];
+      this.section = data[1];
+    } else {
+      this.name = name;
+    }
   }
 }
 
