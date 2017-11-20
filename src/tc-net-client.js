@@ -38,7 +38,7 @@ function TcNetClient() {
 
     request.post(INSA_ICS, {
       form: {
-        'choixMatiere': course.name,
+        'choixMatiere': course.id,
         'SelectionMatiere': 'ok'
       }
     }, function (err, res, data) {
